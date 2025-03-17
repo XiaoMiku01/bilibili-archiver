@@ -15,12 +15,12 @@ jobs:
       fail-fast: false
       matrix:
       # NOTE: Runner `ubuntu-24.04-arm` not yet supported on private repos.
-        platform: [ amd64 ]
+        platform: [ amd64 , arm64 ]
         include:
           - platform: amd64
             runner: ubuntu-latest
-          # - platform: arm64
-          #   runner: ubuntu-24.04-arm
+          - platform: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - name: Checkout
