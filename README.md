@@ -139,6 +139,8 @@ custom_script: ""  # 自定义存档成功后的脚本 如xml转ass脚本  bash 
 
 ```
 
+[示例自定义脚本](./example_script/)
+
 ### 第三方库和参考项目  
 
 [developer](./developer.md)
