@@ -7,17 +7,18 @@ import (
 )
 
 type Config struct {
-	User           string   `yaml:"user"`            // cookie文件路径
-	SavePath       string   `yaml:"save_path"`       // 投稿存储目录
-	PathTemplate   string   `yaml:"path_template"`   // 存储路径模板
-	Keywords       []string `yaml:"keywords"`        // 收藏夹关键词过滤
-	ScanInterval   int      `yaml:"scan_interval"`   // 扫描收藏夹间隔(分钟)
-	UpdateInterval int      `yaml:"update_interval"` // 更新元数据间隔(分钟)
-	UpdateDL       int      `yaml:"update_dl"`       // 停止更新元数据的天数
-	Incremental    bool     `yaml:"incremental"`     // 是否开启增量同步
-	Danmaku        bool     `yaml:"danmaku"`         // 是否下载弹幕
-	Notification   string   `yaml:"notification"`    // 通知配置
-	CustomScript   string   `yaml:"custom_script"`   // 自定义脚本
+	User              string   `yaml:"user"`               // cookie文件路径
+	SavePath          string   `yaml:"save_path"`          // 投稿存储目录
+	PathTemplate      string   `yaml:"path_template"`      // 存储路径模板
+	Keywords          []string `yaml:"keywords"`           // 收藏夹关键词过滤
+	ScanInterval      int      `yaml:"scan_interval"`      // 扫描收藏夹间隔(分钟)
+	UpdateInterval    int      `yaml:"update_interval"`    // 更新元数据间隔(分钟)
+	UpdateDL          int      `yaml:"update_dl"`          // 停止更新元数据的天数
+	Incremental       bool     `yaml:"incremental"`        // 是否开启增量同步
+	Danmaku           bool     `yaml:"danmaku"`            // 是否下载弹幕
+	Notification      string   `yaml:"notification"`       // 通知配置
+	NotificationProxy string   `yaml:"notification_proxy"` // 通知代理
+	CustomScript      string   `yaml:"custom_script"`      // 自定义脚本
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -61,6 +62,7 @@ func LoadConfig(path string) (*Config, error) {
 	fmt.Println("- 是否开启增量同步:", config.Incremental)
 	fmt.Println("- 是否下载弹幕:", config.Danmaku)
 	fmt.Println("- 通知配置:", config.Notification)
+	fmt.Println("- 通知代理:", config.NotificationProxy)
 	fmt.Println("- 自定义脚本:", config.CustomScript)
 
 	return config, nil

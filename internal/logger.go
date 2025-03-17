@@ -33,11 +33,18 @@ func InitLogger(debug bool) {
 		TimeFormat: "2006-01-02 15:04:05",
 	}
 
+	logFile, err := os.OpenFile("bilibili-archiver.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal().Err(err).Msg("无法创建日志文件")
+	}
+
+	// 创建多写入器(同时写入控制台和文件)
+	multi := zerolog.MultiLevelWriter(consoleWriter, logFile)
+
 	// 创建多写入器并启用 Caller
-	log.Logger = zerolog.New(consoleWriter).
+	log.Logger = zerolog.New(multi).
 		With().
 		Timestamp().
-		Caller(). // 启用 Caller 信息
 		Logger()
 	reqLogger := &LoggerWrapper{
 		logger: log.Logger,

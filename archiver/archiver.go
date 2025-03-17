@@ -178,6 +178,36 @@ func (au *ArchiverUser) Run() {
 }
 
 func (au *ArchiverUser) downloadVideo(favname string, vinfo *internal.ViewReply, media internal.FavMediaStruct) error {
+	groupID := vinfo.Bvid
+
+	// 注册任务组，设置回调函数
+	internal.DM.RegisterTaskGroup(groupID, len(vinfo.Pages), func(id, pdir string) {
+		if len(vinfo.Pages) > 1 {
+			log.Info().Msgf("%s 所有分P下载完成", vinfo.Arc.Title)
+		}
+		// 执行自定义脚本和通知
+		if au.config.CustomScript != "" {
+			go internal.ExecCommand(au.config.CustomScript, pdir)
+		}
+
+		// 通知
+		if au.config.Notification != "" {
+			msg := `B站留档助手
+%s-%s.%s (%dP)
+已留档完成
+%s
+`
+			msg = fmt.Sprintf(msg, vinfo.Bvid, vinfo.Arc.Title, vinfo.Arc.Author.Name, len(vinfo.Pages), internal.FormatTime(int(time.Now().Unix())))
+			log.Info().Msg(msg)
+			err := internal.SendNotification(au.config.Notification, msg, au.config.NotificationProxy)
+			if err != nil {
+				log.Error().Err(err).Msg("发送通知失败")
+			} else {
+				log.Info().Msg("发送通知成功")
+			}
+		}
+	})
+
 	for i, p := range vinfo.Pages {
 		log.Info().Msgf("投稿信息: %s: P%d: cid: %d", vinfo.Bvid, i+1, p.Page.Cid)
 		playInfo, err := au.bapi.GetPlayURL(vinfo.Arc.Aid, vinfo.Arc.FirstCid)
@@ -219,6 +249,7 @@ func (au *ArchiverUser) downloadVideo(favname string, vinfo *internal.ViewReply,
 		})
 
 		downloaderTask := internal.DownloadTask{
+			GroupID:   groupID,
 			Title:     fmt.Sprintf("[%s]%s P%d", qualityStr, media.Title, i+1),
 			VideoUrls: vurls,
 			AudioUrls: aurls,

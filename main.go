@@ -14,13 +14,14 @@ import (
 var (
 	Version = "v0.0.1"
 
-	app = kingpin.New("bilibili-archiver", "B站投稿归档工具")
+	app = kingpin.New("bilibili-archiver", "B站留档助手")
 	// 全局标志
 	debug  = app.Flag("debug", "开启debug日志打印").Short('v').Bool()
 	config = app.Flag("config", "配置文件").Short('c').Default("./config.yaml").String()
 
 	// login 命令
 	loginCmd = app.Command("login", "扫码登录B站获取 <uid>_cookie.json")
+	testCmd  = app.Command("test", "测试登录，通知渠道（若配置）")
 
 	// refresh 命令
 	refreshCmd = app.Command("refresh", "更新 cookie.json")
@@ -31,7 +32,6 @@ var (
 	startCmd = app.Command("start", "开始运行程序")
 
 	// test 命令
-	testCmd = app.Command("test", "测试登录，通知渠道（若配置）")
 )
 
 func main() {
@@ -47,7 +47,7 @@ func main() {
 
 	switch command {
 	case loginCmd.FullCommand():
-		log.Debug().Msg("开始登录")
+		log.Info().Msg("开始登录")
 		login.Run()
 
 	case refreshCmd.FullCommand():
@@ -70,6 +70,11 @@ func main() {
 
 	case testCmd.FullCommand():
 		log.Info().Msg("测试配置")
+		config, err := internal.LoadConfig(*config)
+		if err != nil {
+			log.Fatal().Err(err).Msg("加载配置文件失败")
+		}
+		login.RunTest(*config)
 		// TODO: 实现测试逻辑
 	}
 }

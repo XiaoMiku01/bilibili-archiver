@@ -1,11 +1,17 @@
 package internal
 
 import (
+	"bufio"
+	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -121,4 +127,87 @@ func MergeDMList(odms, ldms []XmlD) []XmlD {
 		xds = append(xds, dm)
 	}
 	return xds
+}
+
+// ExecCommand 执行命令行，接受输入字符串作为标准输入，并实时输出结果
+// command: 要执行的命令和参数，如 "python main.py"
+// stdin: 要传递给命令的标准输入
+// ctx: 上下文，可用于取消命令执行
+func ExecCommand(command string, stdin string) {
+	// 分割命令和参数
+	cmdFields := strings.Fields(command)
+	if len(cmdFields) == 0 {
+		log.Error().Msg("命令不能为空")
+		return
+	}
+
+	// 创建命令
+	cmd := exec.CommandContext(context.Background(), cmdFields[0], cmdFields[1:]...)
+
+	// 设置标准输入
+	stdinPipe, err := cmd.StdinPipe()
+	if err != nil {
+		log.Error().Msgf("自定义命令[ %s ]-无法获取标准输入管道: %s", command, err)
+		return
+	}
+
+	// 设置标准输出和标准错误
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Error().Msgf("自定义命令[ %s ]-无法获取标准输出管道: %s", command, err)
+		return
+	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Error().Msgf("自定义命令[ %s ]-无法获取标准错误管道: %s", command, err)
+		return
+	}
+
+	// 启动命令
+	if err := cmd.Start(); err != nil {
+		log.Error().Msgf("自定义命令[ %s ]-启动命令失败: %s", command, err)
+		return
+	}
+
+	// 写入标准输入
+	go func() {
+		defer stdinPipe.Close()
+		// 确保输入以换行符结尾
+		if stdin != "" && !strings.HasSuffix(stdin, "\n") {
+			stdin += "\n"
+		}
+		io.WriteString(stdinPipe, stdin)
+	}()
+
+	// 使用 WaitGroup 等待所有输出读取完毕
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// 读取并打印标准输出
+	go func() {
+		defer wg.Done()
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			log.Warn().Msgf("自定义命令[ %s ]-输出: %s", command, scanner.Text())
+		}
+	}()
+
+	// 读取并打印标准错误
+	go func() {
+		defer wg.Done()
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			log.Error().Msgf("自定义命令[ %s ]-错误: %s", command, scanner.Text())
+		}
+	}()
+
+	// 等待所有输出读取完毕
+	wg.Wait()
+
+	// 等待命令执行完成
+	if err := cmd.Wait(); err != nil {
+		log.Error().Msgf("自定义命令[ %s ]-执行失败: %s", command, err)
+		return
+	}
 }

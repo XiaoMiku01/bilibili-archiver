@@ -104,7 +104,6 @@ func NewBApiClient() *BApiClient {
 		SetCommonRetryCondition(func(resp *req.Response, err error) bool {
 			// 如果有网络错误或其他HTTP错误，进行重试
 			if err != nil {
-				log.Warn().Stack().Err(err).Msg("请求失败, 进行重试")
 				// 如果是B站API错误也进行重试
 				if err, ok := err.(*BiliErr); ok {
 					// -101 可能是未登录或需要重新登录
@@ -112,8 +111,11 @@ func NewBApiClient() *BApiClient {
 						log.Warn().Msg("cookie 失效，刷新 cookie")
 						// 重新登录	TODO
 						return false
+					} else if err.Code == 86039 {
+						return false // 忽略 扫码登录影响
 					}
 				}
+				log.Warn().Stack().Err(err).Msg("请求失败, 进行重试")
 				return true
 			}
 

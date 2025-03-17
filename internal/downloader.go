@@ -23,10 +23,18 @@ type DownloadUrls struct {
 }
 
 type DownloadTask struct {
+	GroupID   string       // 任务组ID
 	Title     string       // 稿件标题（分p）
 	VideoUrls DownloadUrls // 视频下载链接
 	AudioUrls DownloadUrls // 音频下载链接
 	DirPath   string       // 保存路径
+}
+
+type TaskGroup struct {
+	TotalTasks     int
+	CompletedTasks int
+	OnComplete     func(groupID, pdir string)
+	mutex          sync.Mutex
 }
 
 type DownloaderManager struct {
@@ -34,7 +42,9 @@ type DownloaderManager struct {
 	client      *req.Client
 	concurrency int
 	downloadSem chan struct{} // 用于限制并发下载任务数
-	// p           *mpb.Progress
+
+	taskGroups map[string]*TaskGroup
+	groupMutex sync.RWMutex
 }
 
 func NewDownloaderManager() *DownloaderManager {
@@ -59,7 +69,48 @@ func NewDownloaderManager() *DownloaderManager {
 		client:      client,
 		concurrency: 10,
 		downloadSem: make(chan struct{}, 5), // 限制最多5个并发任务
-		// p:           p,
+		taskGroups:  make(map[string]*TaskGroup),
+	}
+}
+
+// 注册任务组并设置完成回调
+func (dm *DownloaderManager) RegisterTaskGroup(groupID string, taskCount int, callback func(string, string)) {
+	dm.groupMutex.Lock()
+	defer dm.groupMutex.Unlock()
+
+	dm.taskGroups[groupID] = &TaskGroup{
+		TotalTasks:     taskCount,
+		CompletedTasks: 0,
+		OnComplete:     callback,
+	}
+}
+
+// 通知任务组完成情况
+func (dm *DownloaderManager) notifyTaskGroupCompletion(groupID, pdir string) {
+	if groupID == "" {
+		return
+	}
+
+	dm.groupMutex.RLock()
+	group, exists := dm.taskGroups[groupID]
+	dm.groupMutex.RUnlock()
+
+	if !exists {
+		return
+	}
+
+	group.mutex.Lock()
+	group.CompletedTasks++
+	completed := group.CompletedTasks >= group.TotalTasks
+	group.mutex.Unlock()
+
+	if completed && group.OnComplete != nil {
+		// 所有任务已完成，调用回调并移除任务组
+		group.OnComplete(groupID, pdir)
+
+		dm.groupMutex.Lock()
+		delete(dm.taskGroups, groupID)
+		dm.groupMutex.Unlock()
 	}
 }
 
@@ -136,6 +187,8 @@ func (dm *DownloaderManager) Run() {
 				// 任务完成后释放信号量
 				<-dm.downloadSem
 				// log.Info().Msgf("删除临时文件: %s", task.Title)
+				// 无论下载成功还是失败，都通知任务组完成状态
+				dm.notifyTaskGroupCompletion(task.GroupID, filepath.Dir(outPath))
 			}()
 
 			if videoErr != nil || audioErr != nil {

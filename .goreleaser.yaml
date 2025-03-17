@@ -5,7 +5,7 @@
 # Feel free to remove those if you don't want/need to use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
-
+version: 2
 project_name: bilibili-archiver
 
 before:
@@ -60,9 +60,18 @@ archives:
       - goos: windows
         format: zip
 
+
+    files:
+      - README.md
+      - LICENSE
+      - config.yaml
+
+
 changelog:
+  use: github
   sort: asc
   filters:
     exclude:
       - "^docs:"
       - "^test:"
+  format: "{{.SHA}}: {{.Message}} (@{{.AuthorUsername}})"
