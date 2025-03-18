@@ -32,3 +32,11 @@
 ### 弹幕转 ass
 
 <https://github.com/hihkm/DanmakuFactory>
+
+### wbi 算法  
+
+<https://github.com/CuteReimu/bilibili>
+
+### grpc 接口  
+
+<https://github.com/XiaoMiku01/bilibili-grpc-api-go>
