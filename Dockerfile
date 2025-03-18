@@ -14,11 +14,11 @@ FROM alpine:latest
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 
-RUN apk update && apk add --no-cache ffmpeg shadow
+RUN apk update && apk add --no-cache ffmpeg shadow bash
 
 # 创建与宿主机UID/GID匹配的用户
 RUN groupadd -g ${GROUP_ID} appgroup && \
-    useradd -u ${USER_ID} -g appgroup -s /bin/sh -m appuser
+    useradd -u ${USER_ID} -g appgroup -s /bin/bash -m appuser
 
 WORKDIR /app
 COPY --from=builder /app/bilibili-archiver /app/bilibili-archiver
@@ -27,7 +27,7 @@ RUN chown appuser:appgroup /app/bilibili-archiver
 WORKDIR /data
 # 设置目录权限
 RUN chown -R appuser:appgroup /data
-
+RUN chsh -s /bin/bash appuser
 # 切换到新创建的用户
 USER appuser
 
