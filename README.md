@@ -92,13 +92,13 @@ cd bilibili-archiver
 
 # 登录
 docker run --rm \
-  -v $(pwd)/data \
+  -v $(pwd):/data \
   ghcr.io/xiaomiku01/bilibili-archiver login
 
 # 启动
 docker run -d \
   --name bilibili-archiver \
-  -v $(pwd)/data \
+  -v $(pwd):/data \
   ghcr.io/xiaomiku01/bilibili-archiver start
 ```
 
