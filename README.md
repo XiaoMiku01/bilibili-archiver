@@ -1,6 +1,14 @@
 # B站留档助手  
 
+[![Release Version](https://img.shields.io/github/v/release/XiaoMiku01/bilibili-archiver?style=flat-square)](https://github.com/XiaoMiku01/bilibili-archiver/releases/latest)
+[![License](https://img.shields.io/github/license/XiaoMiku01/bilibili-archiver?style=flat-square)](https://github.com/XiaoMiku01/bilibili-archiver/blob/main/LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/XiaoMiku01/bilibili-archiver?style=flat-square)](https://go.dev/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/XiaoMiku01/bilibili-archiver)](https://goreportcard.com/report/github.com/XiaoMiku01/bilibili-archiver)
+
 自动同步B站收藏夹投稿、弹幕、元数据至本地  
+
+<a href="https://asciinema.org/a/708893" target="_blank"><img src="./demo.gif" /></a>  
+
 
 ## 实现功能
 
