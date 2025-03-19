@@ -19,8 +19,8 @@ type Config struct {
 	Notification      string   `yaml:"notification"`       // 通知配置
 	NotificationProxy string   `yaml:"notification_proxy"` // 通知代理
 	CustomScript      string   `yaml:"custom_script"`      // 自定义脚本
-
-	DisablePCDN bool `yaml:"disable_pcdn"` // 禁用PCDN下载视频
+	RunAfterUpdate    string   `yaml:"run_after_update"`   // 更新后运行脚本
+	DisablePCDN       bool     `yaml:"disable_pcdn"`       // 禁用PCDN下载视频
 }
 
 // 全局配置
@@ -69,6 +69,7 @@ func LoadConfig(path string) (*Config, error) {
 	fmt.Println("- 通知配置:", config.Notification)
 	fmt.Println("- 通知代理:", config.NotificationProxy)
 	fmt.Println("- 自定义脚本:", config.CustomScript)
+	fmt.Println("- 更新后运行脚本:", config.RunAfterUpdate)
 	fmt.Println("- 禁用PCDN下载视频:", config.DisablePCDN)
 
 	GlobalConfig = config

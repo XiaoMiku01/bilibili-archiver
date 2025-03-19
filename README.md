@@ -10,12 +10,12 @@
 - [x] 定时更新数据
 - [x] 多渠道发送通知
 - [x] 自定义留档后脚本
+- [x] 更新元数据时执行自定义脚本
+- [x] 下载视频时规避 PCDN
 - [x] 支持 Docker 部署
 
 ## TODO
 
-- [x] 下载视频时规避 PCDN
-- [ ] 更新元数据时再次执行自定义脚本
 - [ ] 对指定 UP 主持续监控
 - [ ] 收藏夹投稿失效通知
 - [ ] WebUI 播放本地视频
@@ -150,6 +150,7 @@ notification: telegram://token@telegram?chats=@channel-1,chat-id-1
 notification_proxy : "" # 通知使用的代理 支持 socks5:// 和 http://
 
 custom_script: ""  # 自定义存档成功后的脚本 如xml转ass脚本  bash example_script/xml2ass.sh 
+run_after_update: ""  # 更新元数据后运行的脚本 可以和上面的脚本一样 用于将新增的弹幕转为ass
 
 disable_pcdn: false  # 禁用PCDN下载视频 PCDN下载可能会导致视频花屏
 ```

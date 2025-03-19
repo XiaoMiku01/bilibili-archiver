@@ -29,5 +29,6 @@ notification: telegram://token@telegram?chats=@channel-1,chat-id-1
 notification_proxy : "" # 通知使用的代理 支持 socks5:// 和 http://
 
 custom_script: ""  # 自定义存档成功后的脚本 如xml转ass脚本  bash example_script/xml2ass.sh 
+run_after_update: ""  # 更新元数据后运行的脚本 可以和上面的脚本一样 用于将新增的弹幕转为ass
 
-disable_pcdn: true  # 禁用PCDN下载视频 PCDN下载可能会导致视频花屏
+disable_pcdn: false  # 禁用PCDN下载视频 PCDN下载可能会导致视频花屏

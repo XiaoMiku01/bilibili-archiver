@@ -140,7 +140,7 @@ func ExecCommand(command string, stdin string) {
 		log.Error().Msg("命令不能为空")
 		return
 	}
-
+	log.Debug().Msgf("执行自定义命令: %s , 输入: %s", command, stdin)
 	// 创建命令
 	cmd := exec.CommandContext(context.Background(), cmdFields[0], cmdFields[1:]...)
 

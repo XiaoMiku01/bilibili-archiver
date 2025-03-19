@@ -92,6 +92,11 @@ func (au *ArchiverUser) UpdateVideoMeta() {
 			if au.config.Danmaku {
 				au.updateDanmaku(vmeta.Path)
 			}
+
+			if au.config.RunAfterUpdate != "" {
+				pdir := filepath.Dir(vmeta.Path)
+				internal.ExecCommand(au.config.RunAfterUpdate, pdir)
+			}
 		}
 		log.Info().Msg("元数据更新完成")
 	}
