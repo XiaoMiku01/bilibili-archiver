@@ -359,4 +359,8 @@ func (dm *DownloaderManager) merge(videoPath, audioPath, outPath string) error {
 	return cmd.Run()
 }
 
-var DM = NewDownloaderManager()
+var DM *DownloaderManager
+
+func init() {
+	DM = NewDownloaderManager()
+}

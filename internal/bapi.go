@@ -39,6 +39,7 @@ func NewBiliFrom(data map[string]any) *BiliFrom {
 
 func (bf *BiliFrom) Signature() {
 	bf.data["appkey"] = TV_APP_KEY
+	bf.data["ts"] = time.Now().Unix()
 	keys := make([]string, 0, len(bf.data))
 	for k := range bf.data {
 		keys = append(keys, k)
@@ -109,7 +110,7 @@ func NewBApiClient() *BApiClient {
 					// -101 可能是未登录或需要重新登录
 					if err.Code == -101 {
 						log.Warn().Msg("cookie 失效，刷新 cookie")
-						// 重新登录	TODO
+						RefreshToken(GlobalConfig.User)
 						return false
 					} else if err.Code == 86039 {
 						return false // 忽略 扫码登录影响
@@ -213,7 +214,6 @@ func (ba *BApiClient) GetQRCode() (QRCodeStruct, error) {
 	api := "http://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code"
 	bf := NewBiliFrom(map[string]any{
 		"local_id": 0,
-		"ts":       time.Now().Unix(),
 	})
 	var result QRCodeStruct
 	err := ba.POST(api, bf, &result)
@@ -229,7 +229,6 @@ func (ba *BApiClient) VerifyQrCode(qrcode QRCodeStruct) (CookieInfoStruct, error
 	bf := NewBiliFrom(map[string]any{
 		"auth_code": qrcode.AuthCode,
 		"local_id":  0,
-		"ts":        time.Now().Unix(),
 	})
 	var result CookieInfoStruct
 	err := ba.POST(api, bf, &result)
@@ -259,6 +258,19 @@ func (ba *BApiClient) RefreshToken() (CookieInfoStruct, error) {
 	err = ba.POST(api, bf, &result)
 	if err != nil {
 		return CookieInfoStruct{}, err
+	}
+	return result, nil
+}
+
+func (ba *BApiClient) CheckToken() (TokenInfoStruct, error) {
+	api := "https://passport.bilibili.com/x/passport-login/oauth2/info"
+	bf := NewBiliFrom(map[string]any{
+		"access_token": ba.accessKey,
+	})
+	var result TokenInfoStruct
+	err := ba.GET(api, bf, &result)
+	if err != nil {
+		return TokenInfoStruct{}, err
 	}
 	return result, nil
 }
@@ -323,7 +335,11 @@ func (ba *BApiClient) GetFavMediaList(fid, pn int) (FavMediaListStruct, error) {
 	return result, nil
 }
 
-var BApi = NewBApiClient()
+var BApi *BApiClient
+
+func init() {
+	BApi = NewBApiClient()
+}
 
 func CheckCookieFile(cfName string) (UserInfoStruct, bool) {
 	BApi.SetCookieFile(cfName)
@@ -342,6 +358,8 @@ func RefreshToken(cfName string) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("刷新 cookie 失败")
 		// TODO 通知
+		msg := fmt.Sprintf("自动刷新 cookie 失败: %v 程序已退出", err)
+		SendNotification(GlobalConfig.Notification, msg, GlobalConfig.NotificationProxy)
 		return
 	}
 	cookieInfo.SaveToFile(cfName)

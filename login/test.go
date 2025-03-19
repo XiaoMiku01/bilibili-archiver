@@ -17,6 +17,9 @@ func RunTest(config internal.Config) {
 		log.Fatal().Err(err).Msg("获取用户信息失败")
 	}
 	log.Info().Msgf("用户: %s [UID: %d] 登录成功", buser.Uname, buser.Mid)
+	tinfo, _ := internal.BApi.CheckToken()
+	exTime := tinfo.ExpiresIn / 86400
+	log.Info().Msgf("Cookie 有效期: %d 天", exTime)
 	CheckFFmpeg()
 	// 测试通知
 	if config.Notification != "" {

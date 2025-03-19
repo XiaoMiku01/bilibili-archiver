@@ -48,6 +48,13 @@ type CookieInfoStruct struct {
 	Hint string   `json:"hint"`
 }
 
+type TokenInfoStruct struct {
+	Mid         int64  `json:"mid"`
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+	Refresh     bool   `json:"refresh"`
+}
+
 type UserInfoStruct struct {
 	Uname  string `json:"uname"`
 	Mid    int    `json:"mid"`

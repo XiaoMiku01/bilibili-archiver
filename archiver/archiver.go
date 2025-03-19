@@ -165,14 +165,14 @@ func (au *ArchiverUser) Run() {
 		// 更新 lastRoundTime 为当前时间，这样下次循环会处理这段时间内的新投稿
 		lastRoundTime = int(time.Now().Unix())
 		time.Sleep(time.Duration(au.config.ScanInterval) * time.Minute)
-		_, err = au.bapi.GetUserInfo() // 检查登录状态
-		if err != nil {
-			if err, ok := err.(*internal.BiliErr); ok {
-				if err.Code == -101 {
-					log.Warn().Msg("cookie 失效，刷新 cookie")
-					internal.RefreshToken(au.config.User)
-				}
-			}
+		au.bapi.GetUserInfo() // 检查登录状态
+		tinfo, _ := au.bapi.CheckToken()
+		exTime := tinfo.ExpiresIn / 86400
+		log.Debug().Msgf("Cookie 有效期: %d 天", exTime)
+		if exTime < 7 {
+			// au.bapi.RefreshToken()
+			log.Warn().Msg("Cookie 即将过期，刷新中...")
+			internal.RefreshToken(au.config.User)
 		}
 	}
 }
@@ -192,8 +192,7 @@ func (au *ArchiverUser) downloadVideo(favname string, vinfo *internal.ViewReply,
 
 		// 通知
 		if au.config.Notification != "" {
-			msg := `B站留档助手
-%s-%s.%s (%dP)
+			msg := `%s-%s.%s (%dP)
 已留档完成
 %s
 `

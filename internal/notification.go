@@ -34,7 +34,7 @@ func SendNotification(surl, message string, proxy string) error {
 			ExpectContinueTimeout: 1 * time.Second,
 		}
 	}
-
+	message = "B站留档助手\n" + message
 	err := shoutrrr.Send(surl, message)
 
 	// 还原原始的 Transport
