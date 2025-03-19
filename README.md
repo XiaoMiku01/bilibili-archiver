@@ -14,7 +14,7 @@
 
 ## TODO
 
-- [ ] 下载视频时规避 PCDN
+- [x] 下载视频时规避 PCDN
 - [ ] 更新元数据时再次执行自定义脚本
 - [ ] 对指定 UP 主持续监控
 - [ ] 收藏夹投稿失效通知
@@ -151,6 +151,7 @@ notification_proxy : "" # 通知使用的代理 支持 socks5:// 和 http://
 
 custom_script: ""  # 自定义存档成功后的脚本 如xml转ass脚本  bash example_script/xml2ass.sh 
 
+disable_pcdn: false  # 禁用PCDN下载视频 PCDN下载可能会导致视频花屏
 ```
 
 [示例自定义脚本](./example_script/)

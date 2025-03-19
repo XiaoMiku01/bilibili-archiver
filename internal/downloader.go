@@ -3,6 +3,8 @@ package internal
 import (
 	"fmt"
 	"math"
+	"net/url"
+	"strings"
 
 	"os"
 	"os/exec"
@@ -114,11 +116,35 @@ func (dm *DownloaderManager) notifyTaskGroupCompletion(groupID, pdir string) {
 	}
 }
 
+// 替换 URL 中的 pcdn host
+func (dm *DownloaderManager) replacePCDNHost(inputURL string) string {
+	parsedURL, err := url.Parse(inputURL)
+	if err != nil {
+		return inputURL
+	}
+	queryParams := parsedURL.Query()
+	origin := queryParams.Get("og")
+	if origin == "" {
+		return inputURL
+	}
+	newHost := fmt.Sprintf("upos-sz-mirror%s.bilivideo.com", origin)
+
+	parsedURL.Host = newHost
+
+	return parsedURL.String()
+}
+
 // 使用 HEAD 测试 URL 是否有效 如果有效返回 文件大小
 func (dm *DownloaderManager) TestUrl(url string) (int64, int, bool) {
 	if url == "" {
 		return 0, 111, false
 	}
+
+	if GlobalConfig.DisablePCDN && strings.Contains(url, "mcdn.bilivideo.cn") {
+		url = dm.replacePCDNHost(url)
+		log.Warn().Msgf("已替换PCDN下载链接")
+	}
+
 	resp := dm.client.Head(url).Do()
 	log.Debug().Msgf("%s  %d", url, resp.StatusCode)
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
