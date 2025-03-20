@@ -51,6 +51,10 @@
 #### 方法一: 直接下载可执行文件
 
 从 [Release页面](https://github.com/XiaoMiku01/bilibili-archiver/releases) 下载对应系统的可执行文件。
+* Windows powershell 二维码显示不全在控制台执行以下命令继续操作。
+```bash
+chcp 65001
+```
 
 #### 方法二: 从源码编译
 
