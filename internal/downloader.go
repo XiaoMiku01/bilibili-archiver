@@ -145,7 +145,11 @@ func (dm *DownloaderManager) TestUrl(url string) (int64, int, bool) {
 		log.Warn().Msgf("已替换PCDN下载链接")
 	}
 
-	resp := dm.client.Head(url).Do()
+	resp, err := dm.client.R().Head(url)
+	if err != nil {
+		log.Error().Err(err).Msg("Head request failed")
+		return 0, 0, false
+	}
 	log.Debug().Msgf("%s  %d", url, resp.StatusCode)
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		return 0, resp.StatusCode, false
