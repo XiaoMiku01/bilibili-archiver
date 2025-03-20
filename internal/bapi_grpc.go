@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -15,12 +17,11 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
+	bilimetadata "github.com/XiaoMiku01/bilibili-grpc-api-go/bilibili/metadata"
 	"github.com/XiaoMiku01/bilibili-grpc-api-go/bilibili/metadata/device"
 	"github.com/XiaoMiku01/bilibili-grpc-api-go/bilibili/metadata/locale"
 	"github.com/XiaoMiku01/bilibili-grpc-api-go/bilibili/metadata/network"
 	"github.com/XiaoMiku01/bilibili-grpc-api-go/bilibili/rpc"
-
-	bilimetadata "github.com/XiaoMiku01/bilibili-grpc-api-go/bilibili/metadata"
 
 	playapi "github.com/XiaoMiku01/bilibili-grpc-api-go/bilibili/app/playurl/v1"
 	viewapi "github.com/XiaoMiku01/bilibili-grpc-api-go/bilibili/app/view/v1"
@@ -31,6 +32,34 @@ type ViewReq = viewapi.ViewReq
 type ViewReply = viewapi.ViewReply
 type DmSegMobileReq = dmapi.DmSegMobileReq
 type DanmakuStruct = dmapi.DanmakuElem
+
+// RetryUnaryInterceptor 创建一个支持条件重试的gRPC一元拦截器
+func RetryUnaryInterceptor(maxRetries int, backoffDuration time.Duration) grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		var lastErr error
+		for attempt := 0; attempt <= maxRetries; attempt++ {
+			err := invoker(ctx, method, req, reply, cc, opts...)
+			log.Debug().Msgf("Hook Grpc : %s, req: %v, reply: %v, err: %v [%d/%d]", method, req, reply, err, attempt+1, maxRetries)
+			if err == nil {
+				return nil
+			}
+			lastErr = formatGRPCError(err)
+
+			if attempt >= maxRetries {
+				return err
+			}
+			waitTime := backoffDuration * time.Duration(attempt+1)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(waitTime):
+
+			}
+		}
+
+		return lastErr
+	}
+}
 
 // InitGRPC 初始化B站GRPC客户端
 func (ba *BApiClient) InitGRPC() error {
@@ -46,6 +75,7 @@ func (ba *BApiClient) InitGRPC() error {
 	options := []grpc.DialOption{
 		creds,
 		grpc.WithKeepaliveParams(kacp),
+		grpc.WithUnaryInterceptor(RetryUnaryInterceptor(3, 1*time.Second)),
 	}
 	conn, err := grpc.NewClient(addr, options...)
 	if err != nil {
