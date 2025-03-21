@@ -3,6 +3,7 @@ package archiver
 import (
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -74,7 +75,11 @@ func (au *ArchiverUser) UpdateVideoMeta() {
 			vinfo, err := au.bapi.GetView(&internal.ViewReq{
 				Aid: vmeta.Meta.Aid,
 			})
-			if err != nil {
+			if err != nil || vinfo.Ecode != 0 {
+				if vinfo.Ecode != 0 {
+					err = fmt.Errorf("错误码: %v", vinfo.Ecode)
+					log.Warn().Msg("稿件已被删除")
+				}
 				log.Error().Err(err).Msgf("获取投稿信息失败: %s", vmeta.Path)
 				continue
 			}
