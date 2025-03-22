@@ -82,7 +82,10 @@ func (au *ArchiverUser) UpdateVideoMeta() {
 					// 发送通知
 					if au.config.Notification != "" {
 						msg := fmt.Sprintf("稿件已失效: %s\n", vmeta.Meta.Title)
-						msg += fmt.Sprintf("最后记录时间: %s", internal.FormatTime(vmeta.Meta.Ctime))
+						// 获取最后记录时间
+						tmp, _ := os.Stat(vmeta.Path)
+						last := tmp.ModTime()
+						msg += fmt.Sprintf("最后记录时间: %s", last.Format("2006-01-02 15:04:05"))
 						err = internal.SendNotification(au.config.Notification, msg, au.config.NotificationProxy)
 						if err != nil {
 							log.Error().Err(err).Msg("发送通知失败")
