@@ -1,0 +1,76 @@
+name: CI for dev branch
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          # 保留完整提交历史，便于获取哈希
+          fetch-depth: 0
+      
+      - name: Set Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+      
+      - name: Set environment version
+        run: echo "VERSION=$(git rev-parse --short=7 HEAD)-dev" >> $GITHUB_ENV
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: 'latest'
+          args: release --snapshot --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 这里设置一个默认 tag，避免 goreleaser 要求的 tag 不存在
+          GORELEASER_CURRENT_TAG: v0.0.0
+
+      - name: Upload Darwin AMD64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilibili-archiver-darwin-amd64-${{ env.VERSION }}
+          path: |
+            dist/bilibili-archiver_darwin_amd64*/bilibili-archiver
+
+      - name: Upload Darwin ARM64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilibili-archiver-darwin-arm64-${{ env.VERSION }}
+          path: |
+            dist/bilibili-archiver_darwin_arm64*/bilibili-archiver
+
+      - name: Upload Linux 386 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilibili-archiver-linux-386-${{ env.VERSION }}
+          path: | 
+            dist/bilibili-archiver_linux_386*/bilibili-archiver
+
+      - name: Upload Linux AMD64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilibili-archiver-linux-amd64-${{ env.VERSION }}
+          path: |
+            dist/bilibili-archiver_linux_amd64_v1*/bilibili-archiver
+
+      - name: Upload Linux ARM64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilibili-archiver-linux-arm64-${{ env.VERSION }}
+          path: |
+            dist/bilibili-archiver_linux_arm64*/bilibili-archiver
+
+      - name: Upload Windows AMD64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilibili-archiver-windows-amd64-${{ env.VERSION }}
+          path: |
+            dist/bilibili-archiver_windows_amd64*/bilibili-archiver.exe

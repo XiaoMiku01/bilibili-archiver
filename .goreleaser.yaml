@@ -10,10 +10,7 @@ project_name: bilibili-archiver
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
-    - go generate ./...
 
 builds:
   - env:
@@ -26,7 +23,6 @@ builds:
       - amd64
       - arm64
       - "386"
-    
     ignore:
       - goos: darwin
         goarch: "386"
@@ -37,17 +33,15 @@ builds:
 
     ldflags: >
       -s -w
-      -X main.Version={{.Version}}
+      -X main.Version={{ if .Env.VERSION }}{{ .Env.VERSION }}{{ else }}{{ .Version }}{{ end }}
 
     flags:
       - -trimpath
-
 
     main: ./main.go
 
 archives:
   - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- title .Os }}_
@@ -55,17 +49,15 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
+      
     format_overrides:
       - goos: windows
         format: zip
-
 
     files:
       - README.md
       - LICENSE
       - config.yaml
-
 
 changelog:
   use: github
