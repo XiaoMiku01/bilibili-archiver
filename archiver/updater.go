@@ -75,29 +75,29 @@ func (au *ArchiverUser) UpdateVideoMeta() {
 			vinfo, err := au.bapi.GetView(&internal.ViewReq{
 				Aid: vmeta.Meta.Aid,
 			})
-			if err != nil || vinfo.Ecode != 0 {
-				if vinfo.Ecode != 0 {
-					err = fmt.Errorf("错误码: %v", vinfo.Ecode)
-					log.Warn().Msg("稿件已失效")
-					// 发送通知
-					if au.config.Notification != "" {
-						msg := fmt.Sprintf("稿件已失效: %s\n", vmeta.Meta.Title)
-						// 获取最后记录时间
-						tmp, _ := os.Stat(vmeta.Path)
-						last := tmp.ModTime()
-						msg += fmt.Sprintf("最后记录时间: %s", last.Format("2006-01-02 15:04:05"))
-						err = internal.SendNotification(au.config.Notification, msg, au.config.NotificationProxy)
-						if err != nil {
-							log.Error().Err(err).Msg("发送通知失败")
-						} else {
-							log.Info().Msg("发送通知成功")
-						}
-					}
-					// 重命名元文件到  _deleted.json
-					newPath := strings.Replace(vmeta.Path, "_meta.json", "_meta_deleted.json", 1)
-					os.Rename(vmeta.Path, newPath)
-				}
+			if err != nil {
 				log.Error().Err(err).Msgf("获取投稿信息失败: %s", vmeta.Path)
+				continue
+			}
+			if vinfo.Ecode != 0 {
+				log.Warn().Msgf("稿件已失效: %s", vmeta.Meta.Title)
+				// 发送通知
+				if au.config.Notification != "" {
+					msg := fmt.Sprintf("稿件已失效: %s\n", vmeta.Meta.Title)
+					// 获取最后记录时间
+					tmp, _ := os.Stat(vmeta.Path)
+					last := tmp.ModTime()
+					msg += fmt.Sprintf("最后记录时间: %s", last.Format("2006-01-02 15:04:05"))
+					err = internal.SendNotification(au.config.Notification, msg, au.config.NotificationProxy)
+					if err != nil {
+						log.Error().Err(err).Msg("发送通知失败")
+					} else {
+						log.Info().Msg("发送通知成功")
+					}
+				}
+				// 重命名元文件到  _deleted.json
+				newPath := strings.Replace(vmeta.Path, "_meta.json", "_meta_deleted.json", 1)
+				os.Rename(vmeta.Path, newPath)
 				continue
 			}
 			// 更新元数据
