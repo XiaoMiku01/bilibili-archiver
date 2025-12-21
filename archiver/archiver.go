@@ -214,7 +214,7 @@ func (au *ArchiverUser) downloadVideo(favname string, vinfo *internal.ViewReply,
 
 	for i, p := range vinfo.Pages {
 		log.Info().Msgf("投稿信息: %s: P%d: cid: %d", vinfo.Bvid, i+1, p.Page.Cid)
-		playInfo, err := au.bapi.GetPlayURL(vinfo.Arc.Aid, vinfo.Arc.FirstCid)
+		playInfo, err := au.bapi.GetPlayURL(vinfo.Arc.Aid, p.Page.Cid)
 		if err != nil {
 			log.Error().Err(err).Msgf("获取投稿播放信息失败: %s P%d", media.Title, i+1)
 			continue
